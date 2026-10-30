@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ExcelMathWithLucas - Additional Mathematics Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    #sidebar {
+      width: 340px;
+      min-width: 340px;
+      max-width: 340px;
+      transition: width 0.25s ease, min-width 0.25s ease, max-width 0.25s ease, opacity 0.2s ease;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    #sidebar.collapsed {
+      width: 0px !important;
+      min-width: 0px !important;
+      max-width: 0px !important;
+      border-right-width: 0px !important;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #mediaContainer:fullscreen,
+    #mediaContainer:-webkit-full-screen {
+      width: 100vw !important;
+      height: 100vh !important;
+      max-height: 100vh !important;
+      border: none !important;
+    }
+    #mediaContainer:fullscreen .media-wrapper,
+    #mediaContainer:-webkit-full-screen .media-wrapper {
+      height: calc(100vh - 38px) !important;
+      max-height: 100vh !important;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #c5c5c5;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-900 min-h-screen flex flex-col antialiased">
+
+  <!-- Top Sticky Navigation Bar -->
+  <header class="h-14 sm:h-16 bg-white border-b-2 border-black flex items-center justify-between px-3 sm:px-6 sticky top-0 z-30 shrink-0">
+    <div class="flex items-center gap-3 min-w-0">
+      <button 
+        id="toggleSidebarBtn" 
+        onclick="toggleSidebar()"
+        class="px-3 py-1.5 border-2 border-black font-mono-code text-xs sm:text-sm font-bold uppercase tracking-wider bg-white hover:bg-black hover:text-white transition-colors flex items-center gap-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] shrink-0"
+      >
+        <span>☰</span>
+        <span id="sidebarBtnText">HIDE MENU</span>
+      </button>
+
+      <!-- Logo & Pinned Chapter Header Info -->
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div id="logoContainer" class="w-8 h-8 sm:w-10 sm:h-10 border-2 border-black bg-white flex items-center justify-center shrink-0 overflow-hidden shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] cursor-pointer" onclick="showHomeView()" title="Go to Homepage">
+          <img id="portalLogoImg" src="" alt="Logo" class="hidden w-full h-full object-contain" />
+          <span id="portalLogoPlaceholder" class="font-mono-code font-black text-xs sm:text-sm">EM</span>
+        </div>
+
+        <div class="min-w-0 flex flex-col justify-center">
+          <div class="flex items-center gap-2">
+            <span id="pinnedChapterBadge" class="text-[10px] font-mono-code font-bold bg-black text-white px-1.5 py-0.5 uppercase tracking-wider shrink-0">
+              HOME
+            </span>
+            <h1 id="pinnedChapterTitle" class="text-xs sm:text-base font-extrabold uppercase tracking-tight truncate font-mono-code">
+              Welcome Portal
+            </h1>
+          </div>
+          <p class="text-[9px] sm:text-[10px] font-semibold text-gray-500 uppercase tracking-widest truncate hidden sm:block">
+            EXCELMATHWITHLUCAS PORTAL
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Header Actions -->
+    <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+      <!-- Home View Button -->
+      <button 
+        onclick="showHomeView()" 
+        class="text-xs font-mono-code font-bold uppercase border-2 border-black px-2.5 sm:px-3 py-1 sm:py-1.5 bg-amber-300 text-black hover:bg-amber-400 transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px]"
+      >
+        HOME
+      </button>
+
+      <!-- Edit Mode Toggle (Protected by Teacher PIN) -->
+      <button 
+        id="editTextToggle" 
+        onclick="toggleEditTextMode()" 
+        class="hidden text-xs font-mono-code font-bold uppercase border-2 border-black px-2.5 sm:px-3 py-1 sm:py-1.5 bg-white text-black hover:bg-gray-100 transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px]"
+      >
+        EDIT: <span id="editTextStatus" class="text-red-600">OFF</span>
+      </button>
+
+      <button 
+        onclick="toggleMediaFullscreen()" 
+        title="Toggle Fullscreen"
+        class="hidden sm:flex items-center gap-1 text-xs font-mono-code font-bold uppercase border-2 border-black px-2.5 sm:px-3 py-1 sm:py-1.5 bg-white hover:bg-gray-100 transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px]"
+      >
+        <span>EXPAND</span>
+      </button>
+
+      <button 
+        id="teacherAuthBtn"
+        onclick="handleTeacherAuthClick()" 
+        class="text-xs font-mono-code font-bold uppercase bg-black text-white px-3 sm:px-4 py-1 sm:py-1.5 border-2 border-black hover:bg-gray-800 transition shadow-[2px_2px_0px_0px_rgba(0,0,0,0.4)] active:translate-x-[1px] active:translate-y-[1px]"
+      >
+        TEACHER LOGIN
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Body Layout -->
+  <div class="flex-1 flex relative">
+
+    <!-- Collapsible 17-Chapter Sidebar -->
+    <aside 
+      id="sidebar" 
+      class="bg-white border-r-2 border-black flex flex-col shrink-0 z-20 sticky top-14 sm:top-16 h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)]"
+    >
+      <div class="p-3 border-b-2 border-black bg-gray-50 flex items-center gap-2">
+        <input 
+          type="text" 
+          id="chapterSearchInput" 
+          oninput="filterChapters(this.value)" 
+          placeholder="Search chapters..." 
+          class="w-full bg-white border border-gray-300 px-2 py-1 text-xs sm:text-sm focus:outline-none font-mono-code rounded"
+        />
+      </div>
+
+      <nav id="chapterList" class="flex-1 overflow-y-auto divide-y divide-gray-100">
+        <!-- Rendered chapters 1-17 -->
+      </nav>
+
+      <div class="p-3 border-t-2 border-black bg-gray-50 text-[11px] font-mono-code text-gray-600 flex justify-between items-center shrink-0">
+        <span>O LEVEL AMATHS CHECKLIST</span>
+        <span class="font-bold text-black" id="activeChapterCount">17 TOPICS</span>
+      </div>
+    </aside>
+
+    <!-- Main Viewport Content -->
+    <main id="mainContainer" class="flex-1 bg-gray-100 flex flex-col min-w-0">
+      
+      <!-- HOMEPAGE VIEW CONTAINER -->
+      <div id="homeViewContainer" class="w-full max-w-6xl mx-auto p-3 sm:p-6 lg:p-8 flex flex-col gap-6 pb-40">
+        
+        <!-- Hero Section with Huge Logo Showcase & Bio -->
+        <div class="bg-white border-2 border-black p-6 sm:p-10 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          
+          <!-- Huge Logo Upload & Display Box -->
+          <div class="lg:col-span-5 flex flex-col items-center justify-center">
+            <div class="w-full aspect-square max-h-[320px] border-4 border-black bg-gray-50 flex flex-col items-center justify-center relative overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] group">
+              <img id="heroLogoImg" src="" alt="Portal Logo" class="hidden w-full h-full object-contain p-4" />
+              <div id="heroLogoPlaceholder" class="flex flex-col items-center justify-center p-6 text-center">
+                <span class="font-mono-code font-black text-4xl mb-2 text-black">EM</span>
+                <span class="font-mono-code text-xs text-gray-500 uppercase tracking-widest font-bold">EXCELMATH LOGO SPACE</span>
+              </div>
+              
+              <!-- Quick Upload Overlay for Teacher -->
+              <div id="heroUploadOverlay" class="hidden absolute inset-0 bg-black/70 flex flex-col items-center justify-center p-4 text-white font-mono-code">
+                <p class="text-xs uppercase font-bold mb-2 text-center">Upload / Change Logo</p>
+                <input type="file" id="heroLogoFileInput" accept="image/*" onchange="handleLogoFileUpload(event)" class="text-[10px] file:py-1 file:px-2 file:border file:border-white file:bg-white file:text-black file:font-bold cursor-pointer" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Instructor Introduction / Bio -->
+          <div class="lg:col-span-7 flex flex-col justify-center space-y-4 font-mono-code">
+            <div class="inline-block bg-black text-white text-xs px-2.5 py-1 uppercase tracking-widest font-bold w-max">
+              HEAD INSTRUCTOR &middot; LUCAS
+            </div>
+            <h2 class="text-2xl sm:text-4xl font-black uppercase tracking-tight text-gray-900">
+              Welcome to ExcelMathWithLucas
+            </h2>
+            <div id="instructorBioText" class="text-sm sm:text-base leading-relaxed text-gray-700 font-sans space-y-3 editable-field" contenteditable="false">
+              <p id="bioParagraph1">
+                Hello students! I am Lucas, your dedicated Additional Mathematics mentor. This portal has been meticulously engineered to give you everything you need to master O-Level A-Maths: from comprehensive video tutorials and rigorous practice worksheets to step-by-step walkthroughs and fully worked solutions.
+              </p>
+              <p id="bioParagraph2">
+                Use the sidebar menu to navigate through all 17 chapters of the syllabus, track your mastery, and review core concepts anytime, anywhere. Let's achieve excellence together!
+              </p>
+            </div>
+            <div class="pt-2 flex flex-wrap gap-3">
+              <button onclick="selectChapter(0)" class="px-5 py-2.5 bg-black text-white font-bold text-xs sm:text-sm uppercase tracking-wider border-2 border-black hover:bg-gray-800 transition shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px]">
+                START CHAPTER 01 →
+              </button>
+              <button onclick="toggleSidebar()" class="px-5 py-2.5 bg-white text-black font-bold text-xs sm:text-sm uppercase tracking-wider border-2 border-black hover:bg-gray-100 transition shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px]">
+                BROWSE ALL 17 CHAPTERS
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Syllabus Grid Preview -->
+        <div class="bg-white border-2 border-black p-5 sm:p-7 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <div class="flex items-center justify-between border-b-2 border-black pb-3 mb-4 font-mono-code">
+            <h3 class="text-sm sm:text-lg font-black uppercase tracking-tight flex items-center gap-2">
+              <span class="w-2.5 h-2.5 bg-black"></span>
+              QUICK CHAPTER SELECTOR
+            </h3>
+            <span class="text-[11px] text-gray-500">17 O-LEVEL TOPICS</span>
+          </div>
+          <div id="homeChapterGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 font-mono-code text-xs">
+            <!-- Dynamically populated card links -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- CHAPTER VIEW CONTAINER (Hidden by default until a chapter is selected) -->
+      <div id="chapterViewContainer" class="hidden w-full max-w-6xl mx-auto p-3 sm:p-6 lg:p-8 flex flex-col gap-4 sm:gap-6 pb-40">
+
+        <!-- Chapter In-Page Title Card -->
+        <div class="bg-white border-2 border-black p-4 sm:p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <span id="currentChapterIndexText" class="text-xs font-mono-code font-bold uppercase tracking-wider text-gray-500 block mb-1">
+            CHAPTER 01
+          </span>
+          <h2 id="currentChapterTitle" class="text-xl sm:text-2xl font-black uppercase tracking-tight editable-field" contenteditable="false">
+            Quadratic Functions
+          </h2>
+        </div>
+
+        <!-- Section Navigation Tabs -->
+        <div class="flex flex-wrap items-center gap-2" id="tabsBar">
+          <button 
+            id="tabBtn-tutorial" 
+            onclick="switchTab('tutorial')" 
+            class="tab-btn px-3 sm:px-4 py-2 border-2 border-black font-mono-code text-xs sm:text-sm font-bold uppercase transition bg-black text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+          >
+            1. LESSON TUTORIAL
+          </button>
+          <button 
+            id="tabBtn-practice" 
+            onclick="switchTab('practice')" 
+            class="tab-btn px-3 sm:px-4 py-2 border-2 border-black font-mono-code text-xs sm:text-sm font-bold uppercase transition bg-white text-black hover:bg-gray-200 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+          >
+            2. PRACTICE WORKSHEET
+          </button>
+          <button 
+            id="tabBtn-walkthrough" 
+            onclick="switchTab('walkthrough')" 
+            class="tab-btn px-3 sm:px-4 py-2 border-2 border-black font-mono-code text-xs sm:text-sm font-bold uppercase transition bg-white text-black hover:bg-gray-200 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+          >
+            3. WORKSHEET WALKTHROUGH
+          </button>
+          <button 
+            id="tabBtn-solutions" 
+            onclick="switchTab('solutions')" 
+            class="tab-btn px-3 sm:px-4 py-2 border-2 border-black font-mono-code text-xs sm:text-sm font-bold uppercase transition bg-white text-black hover:bg-gray-200 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+          >
+            4. HANDWRITTEN SOLUTIONS
+          </button>
+        </div>
+
+        <!-- Media Display Area -->
+        <section id="mediaContainer" class="bg-black border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex flex-col">
+          <div class="bg-gray-900 border-b border-gray-700 px-3 py-2 flex items-center justify-between text-white text-xs font-mono-code shrink-0">
+            <span id="mediaStatusLabel" class="flex items-center gap-2">
+              <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              LESSON VIDEO STREAM
+            </span>
+            <button onclick="toggleMediaFullscreen()" class="hover:text-emerald-400 underline font-mono-code">
+              Full Screen
+            </button>
+          </div>
+
+          <div class="media-wrapper w-full aspect-video min-h-[260px] sm:min-h-[440px] max-h-[70vh] bg-black flex items-center justify-center relative">
+            <!-- Native HTML5 Video Player for gallery/local uploads -->
+            <video 
+              id="activeMediaVideo" 
+              class="w-full h-full object-contain hidden" 
+              controls 
+              playsinline
+            ></video>
+
+            <!-- Embedded Frame / Document Viewer -->
+            <iframe 
+              id="activeMediaIframe" 
+              class="w-full h-full border-0 hidden" 
+              src="" 
+              title="Media Display" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+              allowfullscreen
+            ></iframe>
+            
+            <div id="mediaPlaceholder" class="hidden absolute inset-0 bg-neutral-900 text-white flex flex-col items-center justify-center p-6 text-center">
+              <h3 class="text-sm sm:text-base font-bold font-mono-code uppercase mb-1">No Resource Configured</h3>
+              <p class="text-xs text-gray-400 max-w-sm mb-4">This section does not have an attached video or document yet.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Whiteboard Notes Overview -->
+        <section class="bg-white border-2 border-black p-5 sm:p-7 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <div class="flex items-center justify-between border-b-2 border-black pb-3 mb-4">
+            <h3 class="text-sm sm:text-lg font-black font-mono-code uppercase tracking-tight flex items-center gap-2">
+              <span class="w-2.5 h-2.5 bg-black"></span>
+              WHITEBOARD LESSON OVERVIEW
+            </h3>
+            <span class="text-[11px] font-mono-code text-gray-500">EXAM SUMMARY</span>
+          </div>
+
+          <div id="chapterOverviewText" class="text-sm sm:text-base leading-relaxed text-gray-800 space-y-3 editable-field" contenteditable="false">
+            <p id="overviewParagraph">
+              Watch the full whiteboard explanation, theorem derivations, key exam formulas, and step-by-step examination layout for this chapter.
+            </p>
+            <div class="bg-gray-50 border-l-4 border-black p-3.5 font-mono-code text-xs sm:text-sm text-gray-700">
+              💡 <strong>Pro Tip:</strong> Ensure all intermediate values retain exact radical / surd values before final rounding.
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- PASSWORD PIN MODAL -->
+  <div id="authModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white border-4 border-black w-full max-w-sm shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-5 flex flex-col font-mono-code">
+      <h3 class="font-black text-sm uppercase tracking-tight mb-1">TEACHER AUTHENTICATION</h3>
+      <p class="text-[11px] text-gray-500 mb-4">Enter master PIN to unlock editing &amp; resources.</p>
+      
+      <input 
+        type="password" 
+        id="passwordInput" 
+        placeholder="Enter PIN" 
+        class="border-2 border-black p-2 text-sm bg-gray-50 mb-4 focus:bg-white focus:outline-none"
+        onkeydown="if(event.key === 'Enter') { event.target.blur(); verifyPassword(); }"
+      />
+
+      <div class="flex justify-end gap-2 text-xs">
+        <button onclick="closeAuthModal()" class="px-3 py-1.5 border-2 border-black bg-white uppercase font-bold">Cancel</button>
+        <button onclick="verifyPassword()" class="px-4 py-1.5 border-2 border-black bg-black text-white uppercase font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">Unlock</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STUDIO MODAL (Protected by PIN 94668661) -->
+  <div id="studioModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white border-4 border-black w-full max-w-xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-h-[90vh] flex flex-col">
+      <div class="p-4 border-b-2 border-black bg-gray-100 flex items-center justify-between">
+        <div>
+          <h3 class="font-mono-code font-black text-sm sm:text-base uppercase tracking-tight">
+            STUDIO: <span id="studioChapterLabel">PORTAL SETTINGS</span>
+          </h3>
+          <p class="text-[11px] text-gray-500 font-mono-code">Configure Logo, Gallery Uploads, and Materials</p>
+        </div>
+        <button onclick="closeStudioModal()" class="text-lg font-bold px-2 hover:bg-black hover:text-white transition">✕</button>
+      </div>
+
+      <div class="p-4 sm:p-6 overflow-y-auto space-y-4 font-mono-code text-xs sm:text-sm">
+        
+        <!-- Logo Upload Section -->
+        <div class="p-3 border-2 border-black bg-gray-50">
+          <label class="block font-bold uppercase mb-1">Brand Logo Image (Huge Display Space)</label>
+          <div class="flex flex-col sm:flex-row gap-2 items-center mb-2">
+            <input 
+              type="file" 
+              id="logoFileInput" 
+              accept="image/*" 
+              onchange="handleLogoFileUpload(event)"
+              class="text-xs file:mr-2 file:py-1.5 file:px-3 file:border-2 file:border-black file:text-xs file:font-mono-code file:bg-white hover:file:bg-black hover:file:text-white file:cursor-pointer w-full"
+            />
+          </div>
+          <p class="text-[10px] text-gray-500 mb-1">Or direct image URL (PNG / JPG / SVG):</p>
+          <input 
+            type="text" 
+            id="inputLogoUrl" 
+            placeholder="e.g. logo.png or https://i.imgur.com/..." 
+            class="w-full border-2 border-black p-2 bg-white focus:outline-none text-xs" 
+          />
+        </div>
+
+        <div id="chapterStudioFields" class="space-y-4 pt-2 border-t-2 border-dashed border-black">
+          <p class="font-bold uppercase text-xs text-gray-600">Active Chapter Resources (Upload from Gallery / Files or Link):</p>
+          
+          <!-- 1. Lesson Tutorial Video File Upload -->
+          <div class="p-3 border-2 border-black bg-gray-50">
+            <label class="block font-bold uppercase mb-1">1. Lesson Tutorial Video (Select from Gallery / File)</label>
+            <input type="file" id="inputTutVidFile" accept="video/*" onchange="handleVideoFileUpload(event, 'tutVid')" class="text-xs file:mr-2 file:py-1.5 file:px-3 file:border-2 file:border-black file:text-xs file:font-mono-code file:bg-white hover:file:bg-black hover:file:text-white file:cursor-pointer w-full mb-2" />
+            <input type="text" id="inputTutVid" placeholder="Or paste direct video URL / link" class="w-full border-2 border-black p-2 bg-white focus:outline-none text-xs" />
+          </div>
+
+          <!-- 2. Practice Worksheet PDF -->
+          <div>
+            <label class="block font-bold uppercase mb-1">2. Practice Worksheet (PDF URL or File link)</label>
+            <input type="text" id="inputWsPdf" placeholder="e.g. worksheets/ch01.pdf" class="w-full border-2 border-black p-2.5 bg-gray-50 focus:bg-white focus:outline-none" />
+          </div>
+
+          <!-- 3. Worksheet Walkthrough Video File Upload -->
+          <div class="p-3 border-2 border-black bg-gray-50">
+            <label class="block font-bold uppercase mb-1">3. Worksheet Walkthrough Video (Select from Gallery / File)</label>
+            <input type="file" id="inputWalkVidFile" accept="video/*" onchange="handleVideoFileUpload(event, 'walkVid')" class="text-xs file:mr-2 file:py-1.5 file:px-3 file:border-2 file:border-black file:text-xs file:font-mono-code file:bg-white hover:file:bg-black hover:file:text-white file:cursor-pointer w-full mb-2" />
+            <input type="text" id="inputWalkVid" placeholder="Or paste direct video URL / link" class="w-full border-2 border-black p-2 bg-white focus:outline-none text-xs" />
+          </div>
+
+          <!-- 4. Handwritten Solutions PDF -->
+          <div>
+            <label class="block font-bold uppercase mb-1">4. Handwritten Solutions (PDF URL or File link)</label>
+            <input type="text" id="inputSolPdf" placeholder="e.g. solutions/ch01_sol.pdf" class="w-full border-2 border-black p-2.5 bg-gray-50 focus:bg-white focus:outline-none" />
+          </div>
+        </div>
+      </div>
+
+      <div class="p-3 sm:p-4 border-t-2 border-black bg-gray-50 flex items-center justify-between font-mono-code text-xs">
+        <button onclick="lockTeacherMode()" class="text-red-600 font-bold uppercase underline">Log Out &amp; Lock</button>
+        <div class="flex gap-2">
+          <button onclick="closeStudioModal()" class="px-4 py-2 border-2 border-black bg-white hover:bg-gray-200 uppercase font-bold">Cancel</button>
+          <button onclick="saveStudioChanges()" class="px-5 py-2 border-2 border-black bg-black text-white hover:bg-gray-800 uppercase font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px]">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="fixed bottom-4 right-4 bg-black text-white font-mono-code text-xs px-4 py-2.5 border-2 border-white shadow-xl transition-opacity duration-300 opacity-0 pointer-events-none z-50">
+    Changes saved!
+  </div>
+
+  <script>
+    // Master Teacher PIN
+    const MASTER_PIN = "94668661";
+
+    const CHECKLIST_CHAPTERS = [
+      { id: '01', title: 'Quadratic Functions', tutVid: '', wsPdf: '', walkVid: '', solPdf: '', overview: '' },
+      { id: '02', title: 'Equations and Inequalities', tutVid: '', wsPdf: '', walkVid: '', solPdf: '', overview: '' },
+      { id: '03', title: 'Surds', tutVid: '', wsPdf: '', walkVid: '', solPdf: '', overview: '' },
+      { id: '04', title: 'Polynomials, Cubic equations and partial fractions', tutVid: '', wsPdf: '', walkVid: '', solPdf: '', overview: '' },
+      { id: '05', title: 'Binomial Theorem', tutVid: '', wsPdf: '', walkVid: '', solPdf: '', overview: '' },
+      { id: '06', title: 'Exponential and Logarithmic Functions', tutVid: '', wsPdf: '', walkVid: '', solPdf: '', overview: '' },
+      { id: '07', title: 'Coordinate Geometry', tutVid: '', wsPdf: '', walkVid: '', solPdf: '', overview: '' },
+      { id: '08', title: 'Linear Law', tutVid: '', wsPdf: '', walkVid: '', solPdf: '', overview: '' },
+      { id: '09', title: 'Trigonometric Functions and Graphs', tutVid: '', wsPdf: '', walkVid: '', solPdf: '', overview: '' },
+      { id: '10', title: 'Trigonometric Equations and identities', tutVid: '', wsPdf: '', walkVid: '', solPdf: '', overview: '' },
+      { id: '11', title: 'Gradients, Derivatives and Differentiation Techniques', tutVid: '', wsPdf: '', walkVid: '', solPdf: '', overview: '' },
+      { id: '12', title: 'Application of Differentiation', tutVid: '', wsPdf: '', walkVid: '', solPdf: '', overview: '' },
+      { id: '13', title: 'Differentiation of Trigonometric Exponential and Logarithmic Functions and their applications', tutVid: '', wsPdf: '', walkVid: '', solPdf: '', overview: '' },
+      { id: '14', title: 'Integration', tutVid: '', wsPdf: '', walkVid: '', solPdf: '', overview: '' },
+      { id: '15', title: 'Applications of Integration', tutVid: '', wsPdf: '', walkVid: '', solPdf: '', overview: '' },
+      { id: '16', title: 'Kinematics', tutVid: '', wsPdf: '', walkVid: '', solPdf: '', overview: '' },
+      { id: '17', title: 'Proofs in Plane Geometry', tutVid: '', wsPdf: '', walkVid: '', solPdf: '', overview: '' }
+    ];
+
+    let chapters = [];
+    let currentChapterIndex = 0;
+    let currentTab = 'tutorial';
+    let isEditingText = false;
+    let isTeacherUnlocked = false;
+    let uploadedLogoData = localStorage.getItem('excel_amath_logo_data') || '';
+    let bioData1 = localStorage.getItem('excel_amath_bio1') || '';
+    let bioData2 = localStorage.getItem('excel_amath_bio2') || '';
+
+    function initData() {
+      try {
+        const stored = localStorage.getItem('excel_amath_mastery_v3');
+        chapters = stored ? JSON.parse(stored) : CHECKLIST_CHAPTERS;
+      } catch (e) {
+        chapters = CHECKLIST_CHAPTERS;
+      }
+      applyLogo(uploadedLogoData);
+      if (bioData1) document.getElementById('bioParagraph1').textContent = bioData1;
+      if (bioData2) document.getElementById('bioParagraph2').textContent = bioData2;
+      renderHomeChapterGrid();
+    }
+
+    function persistData() {
+      try {
+        localStorage.setItem('excel_amath_mastery_v3', JSON.stringify(chapters));
+      } catch (e) {
+        console.error('Storage error:', e);
+      }
+    }
+
+    function applyLogo(src) {
+      const imgNav = document.getElementById('portalLogoImg');
+      const placeholderNav = document.getElementById('portalLogoPlaceholder');
+      const imgHero = document.getElementById('heroLogoImg');
+      const placeholderHero = document.getElementById('heroLogoPlaceholder');
+
+      if (src && src.trim()) {
+        imgNav.src = src;
+        imgNav.classList.remove('hidden');
+        placeholderNav.classList.add('hidden');
+
+        imgHero.src = src;
+        imgHero.classList.remove('hidden');
+        placeholderHero.classList.add('hidden');
+      } else {
+        imgNav.classList.add('hidden');
+        placeholderNav.classList.remove('hidden');
+
+        imgHero.classList.add('hidden');
+        placeholderHero.classList.remove('hidden');
+      }
+    }
+
+    function handleLogoFileUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          uploadedLogoData = e.target.result;
+          document.getElementById('inputLogoUrl').value = '';
+          applyLogo(uploadedLogoData);
+          localStorage.setItem('excel_amath_logo_data', uploadedLogoData);
+          showToast('Logo image uploaded successfully!');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function handleVideoFileUpload(event, fieldKey) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const base64Video = e.target.result;
+          if (fieldKey === 'tutVid') {
+            document.getElementById('inputTutVid').value = base64Video;
+          } else if (fieldKey === 'walkVid') {
+            document.getElementById('inputWalkVid').value = base64Video;
+          }
+          showToast('Video file loaded from gallery/device!');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function renderChapterNav(filter = '') {
+      const container = document.getElementById('chapterList');
+      container.innerHTML = '';
+      const filterLower = filter.trim().toLowerCase();
+
+      let visibleCount = 0;
+      chapters.forEach((ch, idx) => {
+        const match = ch.title.toLowerCase().includes(filterLower) || ch.id.includes(filterLower);
+        if (!match) return;
+
+        visibleCount++;
+        const isCurrent = idx === currentChapterIndex;
+        const item = document.createElement('div');
+        item.className = `w-full text-left p-3.5 flex items-center justify-between text-xs sm:text-sm font-mono-code transition-colors cursor-pointer ${
+          isCurrent 
+            ? 'bg-black text-white font-bold' 
+            : 'text-gray-800 hover:bg-gray-100'
+        }`;
+        
+        item.onclick = (e) => {
+          if (e.target.classList.contains('sidebar-ch-title') && isEditingText && isTeacherUnlocked) return;
+          selectChapter(idx);
+        };
+
+        item.innerHTML = `
+          <div class="flex items-center gap-2.5 truncate min-w-0 flex-1 mr-2">
+            <span class="opacity-60 font-bold shrink-0">${ch.id}</span>
+            <span 
+              class="sidebar-ch-title truncate ${isEditingText && isTeacherUnlocked ? 'ring-1 ring-emerald-400 bg-emerald-50/20 px-1 rounded' : ''}" 
+              contenteditable="${isEditingText && isTeacherUnlocked ? 'true' : 'false'}"
+              data-index="${idx}"
+              oninput="handleSidebarTitleInput(event, ${idx})"
+            >${ch.title}</span>
+          </div>
+          <span class="text-xs ${isCurrent ? 'text-white' : 'text-gray-400'} shrink-0">→</span>
+        `;
+        container.appendChild(item);
+      });
+
+      document.getElementById('activeChapterCount').textContent = `${visibleCount} TOPICS`;
+    }
+
+    function renderHomeChapterGrid() {
+      const grid = document.getElementById('homeChapterGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+      chapters.forEach((ch, idx) => {
+        const card = document.createElement('div');
+        card.className = "border-2 border-black p-3 bg-gray-50 hover:bg-black hover:text-white transition cursor-pointer flex items-center justify-between shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]";
+        card.onclick = () => selectChapter(idx);
+        card.innerHTML = `
+          <div class="truncate mr-2">
+            <span class="font-bold opacity-70 mr-1.5">${ch.id}.</span>
+            <span class="truncate">${ch.title}</span>
+          </div>
+          <span>→</span>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function handleSidebarTitleInput(e, idx) {
+      if (!isTeacherUnlocked) return;
+      const newText = e.target.textContent.trim();
+      chapters[idx].title = newText;
+      if (idx === currentChapterIndex) {
+        document.getElementById('pinnedChapterTitle').textContent = newText;
+        document.getElementById('currentChapterTitle').textContent = newText;
+      }
+      renderHomeChapterGrid();
+    }
+
+    function filterChapters(query) {
+      renderChapterNav(query);
+    }
+
+    function showHomeView() {
+      document.getElementById('homeViewContainer').classList.remove('hidden');
+      document.getElementById('chapterViewContainer').classList.add('hidden');
+      document.getElementById('pinnedChapterBadge').textContent = "HOME";
+      document.getElementById('pinnedChapterTitle').textContent = "Welcome Portal";
+      renderChapterNav(document.getElementById('chapterSearchInput').value);
+    }
+
+    function selectChapter(index) {
+      currentChapterIndex = index;
+      const ch = chapters[index];
+
+      document.getElementById('homeViewContainer').classList.add('hidden');
+      document.getElementById('chapterViewContainer').classList.remove('hidden');
+
+      document.getElementById('pinnedChapterBadge').textContent = `CH ${ch.id}`;
+      document.getElementById('pinnedChapterTitle').textContent = ch.title;
+      document.getElementById('currentChapterIndexText').textContent = `CHAPTER ${ch.id}`;
+      document.getElementById('currentChapterTitle').textContent = ch.title;
+      document.getElementById('studioChapterLabel').textContent = `CHAPTER ${ch.id}`;
+
+      if (ch.overview) {
+        document.getElementById('overviewParagraph').textContent = ch.overview;
+      }
+
+      renderChapterNav(document.getElementById('chapterSearchInput').value);
+      loadActiveMedia();
+    }
+
+    function switchTab(tabKey) {
+      currentTab = tabKey;
+      const tabKeys = ['tutorial', 'practice', 'walkthrough', 'solutions'];
+      tabKeys.forEach(key => {
+        const btn = document.getElementById(`tabBtn-${key}`);
+        if (!btn) return;
+        if (key === tabKey) {
+          btn.className = "tab-btn px-3 sm:px-4 py-2 border-2 border-black font-mono-code text-xs sm:text-sm font-bold uppercase transition bg-black text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]";
+        } else {
+          btn.className = "tab-btn px-3 sm:px-4 py-2 border-2 border-black font-mono-code text-xs sm:text-sm font-bold uppercase transition bg-white text-black hover:bg-gray-200 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]";
+        }
+      });
+      loadActiveMedia();
+    }
+
+    function loadActiveMedia() {
+      const ch = chapters[currentChapterIndex];
+      const videoPlayer = document.getElementById('activeMediaVideo');
+      const iframe = document.getElementById('activeMediaIframe');
+      const placeholder = document.getElementById('mediaPlaceholder');
+      const statusLabel = document.getElementById('mediaStatusLabel');
+
+      let targetUrl = '';
+      let labelText = '';
+
+      if (currentTab === 'tutorial') {
+        targetUrl = ch.tutVid;
+        labelText = 'LESSON TUTORIAL VIDEO';
+      } else if (currentTab === 'practice') {
+        targetUrl = ch.wsPdf;
+        labelText = 'PRACTICE WORKSHEET';
+      } else if (currentTab === 'walkthrough') {
+        targetUrl = ch.walkVid;
+        labelText = 'WORKSHEET WALKTHROUGH VIDEO';
+      } else if (currentTab === 'solutions') {
+        targetUrl = ch.solPdf;
+        labelText = 'HANDWRITTEN SOLUTIONS';
+      }
+
+      statusLabel.innerHTML = `<span class="inline-block w-2.5 h-2.5 rounded-full ${targetUrl ? 'bg-emerald-400' : 'bg-amber-400'} animate-pulse"></span> ${labelText}`;
+
+      // Reset players
+      videoPlayer.pause();
+      videoPlayer.src = '';
+      videoPlayer.classList.add('hidden');
+      iframe.src = '';
+      iframe.classList.add('hidden');
+
+      if (!targetUrl || !targetUrl.trim()) {
+        placeholder.classList.remove('hidden');
+        return;
+      }
+
+      placeholder.classList.add('hidden');
+
+      // Check if it's a local video upload (base64) or direct video file
+      if (targetUrl.startsWith('data:video') || targetUrl.endsWith('.mp4') || targetUrl.endsWith('.webm') || targetUrl.endsWith('.ogg')) {
+        videoPlayer.src = targetUrl;
+        videoPlayer.classList.remove('hidden');
+      } else {
+        // Embed frame for PDFs or web links
+        iframe.src = targetUrl;
+        iframe.classList.remove('hidden');
+      }
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const btnText = document.getElementById('sidebarBtnText');
+      const isCurrentlyCollapsed = sidebar.classList.contains('collapsed');
+
+      if (isCurrentlyCollapsed) {
+        sidebar.classList.remove('collapsed');
+        btnText.textContent = "HIDE MENU";
+      } else {
+        sidebar.classList.add('collapsed');
+        btnText.textContent = "SHOW MENU";
+      }
+    }
+
+    function toggleMediaFullscreen() {
+      const mediaSection = document.getElementById('mediaContainer');
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        if (mediaSection.requestFullscreen) {
+          mediaSection.requestFullscreen();
+        } else if (mediaSection.webkitRequestFullscreen) {
+          mediaSection.webkitRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
+    }
+
+    function handleTeacherAuthClick() {
+      if (isTeacherUnlocked) {
+        openStudioModal();
+      } else {
+        document.getElementById('authModal').classList.remove('hidden');
+        document.getElementById('passwordInput').focus();
+      }
+    }
+
+    function closeAuthModal() {
+      document.getElementById('authModal').classList.add('hidden');
+      document.getElementById('passwordInput').value = '';
+    }
+
+    function verifyPassword() {
+      const val = document.getElementById('passwordInput').value.trim();
+      if (val === MASTER_PIN) {
+        isTeacherUnlocked = true;
+        closeAuthModal();
+        document.getElementById('editTextToggle').classList.remove('hidden');
+        document.getElementById('heroUploadOverlay').classList.remove('hidden');
+        document.getElementById('teacherAuthBtn').textContent = "STUDIO";
+        showToast('Teacher mode unlocked!');
+        openStudioModal();
+      } else {
+        alert('Incorrect PIN. Student access only.');
+        document.getElementById('passwordInput').value = '';
+      }
+    }
+
+    function lockTeacherMode() {
+      isTeacherUnlocked = false;
+      if (isEditingText) toggleEditTextMode();
+      document.getElementById('editTextToggle').classList.add('hidden');
+      document.getElementById('heroUploadOverlay').classList.add('hidden');
+      document.getElementById('teacherAuthBtn').textContent = "TEACHER LOGIN";
+      closeStudioModal();
+      showToast('Logged out. Edit mode locked.');
+    }
+
+    function toggleEditTextMode() {
+      if (!isTeacherUnlocked) return;
+
+      isEditingText = !isEditingText;
+      const statusSpan = document.getElementById('editTextStatus');
+      const editableFields = document.querySelectorAll('.editable-field');
+
+      if (isEditingText) {
+        statusSpan.textContent = 'ON';
+        statusSpan.className = 'text-emerald-600 font-black';
+        editableFields.forEach(el => {
+          el.setAttribute('contenteditable', 'true');
+          el.classList.add('ring-2', 'ring-emerald-400', 'bg-emerald-50/20');
+        });
+        renderChapterNav(document.getElementById('chapterSearchInput').value);
+        showToast('Text edit ON: Tap any title or bio to modify.');
+      } else {
+        statusSpan.textContent = 'OFF';
+        statusSpan.className = 'text-red-600 font-bold';
+        editableFields.forEach(el => {
+          el.setAttribute('contenteditable', 'false');
+          el.classList.remove('ring-2', 'ring-emerald-400', 'bg-emerald-50/20');
+        });
+        
+        const b1 = document.getElementById('bioParagraph1').textContent.trim();
+        const b2 = document.getElementById('bioParagraph2').textContent.trim();
+        localStorage.setItem('excel_amath_bio1', b1);
+        localStorage.setItem('excel_amath_bio2', b2);
+
+        const newTitle = document.getElementById('currentChapterTitle').textContent.trim();
+        const newOverview = document.getElementById('overviewParagraph').textContent.trim();
+        chapters[currentChapterIndex].title = newTitle;
+        chapters[currentChapterIndex].overview = newOverview;
+        document.getElementById('pinnedChapterTitle').textContent = newTitle;
+        
+        persistData();
+        renderChapterNav(document.getElementById('chapterSearchInput').value);
+        renderHomeChapterGrid();
+        showToast('All changes saved!');
+      }
+    }
+
+    function openStudioModal() {
+      if (!isTeacherUnlocked) return;
+      const ch = chapters[currentChapterIndex];
+      document.getElementById('studioChapterLabel').textContent = `CHAPTER ${ch.id} (${ch.title})`;
+      document.getElementById('inputLogoUrl').value = uploadedLogoData.startsWith('data:') ? '' : uploadedLogoData;
+      document.getElementById('inputTutVid').value = ch.tutVid || '';
+      document.getElementById('inputWsPdf').value = ch.wsPdf || '';
+      document.getElementById('inputWalkVid').value = ch.walkVid || '';
+      document.getElementById('inputSolPdf').value = ch.solPdf || '';
+      document.getElementById('studioModal').classList.remove('hidden');
+    }
+
+    function closeStudioModal() {
+      document.getElementById('studioModal').classList.add('hidden');
+    }
+
+    function saveStudioChanges() {
+      if (!isTeacherUnlocked) return;
+
+      const enteredLogo = document.getElementById('inputLogoUrl').value.trim();
+      if (enteredLogo) {
+        uploadedLogoData = enteredLogo;
+        localStorage.setItem('excel_amath_logo_data', uploadedLogoData);
+        applyLogo(uploadedLogoData);
+      }
+
+      const ch = chapters[currentChapterIndex];
+      ch.tutVid = document.getElementById('inputTutVid').value.trim();
+      ch.wsPdf = document.getElementById('inputWsPdf').value.trim();
+      ch.walkVid = document.getElementById('inputWalkVid').value.trim();
+      ch.solPdf = document.getElementById('inputSolPdf').value.trim();
+
+      persistData();
+      loadActiveMedia();
+      closeStudioModal();
+      showToast(`Saved Chapter ${ch.id} & Portal Settings!`);
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      toast.classList.add('opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 2000);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initData();
+      renderChapterNav();
+      showHomeView();
+    });
+  </script>
+</body>
+</html>
